@@ -96,7 +96,7 @@ class Dataset(BaseModel):
             d = Dataset.create(name=name, project=project,
                                meta_features=meta_features)
             for fname, uri in zip(file_names, file_uris):
-                f, created = File.create_or_get(name=fname, uri=uri)
+                f, created = File.get_or_create(name=fname, uri=uri)
                 DatasetFile.create(dataset=d, file=f)
         return d
 
@@ -198,7 +198,7 @@ class Prediction(BaseModel):
         info['featureset_name'] = self.model.featureset.name
         if self.task_id is None:
             try:
-                with xr.open_dataset(self.file.uri, engine=cfg['xr_engine']) as pset:
+                with xr.open_dataset(self.file.uri) as pset:
                     info['results'] = pset.load()
             except (RuntimeError, OSError):
                 info['results'] = None

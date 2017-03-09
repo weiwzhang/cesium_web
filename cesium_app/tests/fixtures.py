@@ -88,8 +88,8 @@ def create_test_featureset(project, label_type='class'):
     fset_data = fixtures.sample_featureset(5, 1, features_to_use, targets)
     fset_path = pjoin(cfg['paths']['features_folder'],
                       '{}.nc'.format(str(uuid.uuid4())))
-    fset_data.to_netcdf(fset_path, engine=cfg['xr_engine'])
-    f, created = m.File.create_or_get(uri=fset_path)
+    fset_data.to_netcdf(fset_path)
+    f, created = m.File.get_or_create(uri=fset_path)
     fset = m.Featureset.create(name='test_featureset', file=f, project=project,
                                features_list=features_to_use,
                                custom_features_script=None,
@@ -127,13 +127,13 @@ def create_test_model(fset, model_type='RandomForestClassifier'):
             "loss": "hinge"},
         "LinearRegressor": {
             "fit_intercept": True}}
-    with featureset.from_netcdf(fset.file.uri, engine=cfg['xr_engine']) as fset_data:
+    with featureset.from_netcdf(fset.file.uri) as fset_data:
         model_data = build_model.build_model_from_featureset(fset_data,
                                                              model_type=model_type)
         model_path = pjoin(cfg['paths']['models_folder'],
                            '{}.pkl'.format(str(uuid.uuid4())))
         joblib.dump(model_data, model_path)
-    f, created = m.File.create_or_get(uri=model_path)
+    f, created = m.File.get_or_create(uri=model_path)
     model = m.Model.create(name='test_model',
                            file=f, featureset=fset, project=fset.project,
                            params=model_params[model_type], type=model_type,
@@ -157,13 +157,13 @@ def create_test_prediction(dataset, model):
         The model to use to create prediction.
 
     """
-    with featureset.from_netcdf(model.featureset.file.uri, engine=cfg['xr_engine']) as fset_data:
+    with featureset.from_netcdf(model.featureset.file.uri) as fset_data:
         model_data = joblib.load(model.file.uri)
         pred_data = predict.model_predictions(fset_data.load(), model_data)
     pred_path = pjoin(cfg['paths']['predictions_folder'],
                       '{}.nc'.format(str(uuid.uuid4())))
-    pred_data.to_netcdf(pred_path, engine=cfg['xr_engine'])
-    f, created = m.File.create_or_get(uri=pred_path)
+    pred_data.to_netcdf(pred_path)
+    f, created = m.File.get_or_create(uri=pred_path)
     pred = m.Prediction.create(file=f, dataset=dataset, project=dataset.project,
                                model=model, finished=datetime.datetime.now())
     pred.save()
