@@ -5,7 +5,7 @@ import ReactTabs from 'react-tabs';
 
 // For Walkthrough 
 import Joyride from 'react-joyride';
-import './react-joyride-compiled.css';
+import '../css/react-joyride-compiled.css';
 
 import 'bootstrap-css';
 import 'bootstrap';
@@ -241,7 +241,7 @@ class MainContent extends React.Component {
           run={true}
           type={"continuous"}
           showSkipButton={true}
-          showOverlay={true}
+          //showOverlay={true}
           allowClicksThruHole={true}
           autoStart={true}
           disableOverlay={true}
