@@ -16,7 +16,7 @@ const ProjectForm = (props) => {
           error, resetForm, submitting, handleSubmit } = props;
 
   return (
-    <Form onSubmit={handleSubmit} error={error}>
+    <Form className="form1" onSubmit={handleSubmit} error={error}>
       <TextInput label="Project Name" {...projectName} />
       <TextInput label="Project Description (optional)" {...projectDescription} />
       <SubmitButton

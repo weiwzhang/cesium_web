@@ -3,6 +3,10 @@ import { connect, Provider } from 'react-redux';
 import ReactDOM from 'react-dom';
 import ReactTabs from 'react-tabs';
 
+// For Walkthrough 
+import Joyride from 'react-joyride';
+import './react-joyride-compiled.css';
+
 import 'bootstrap-css';
 import 'bootstrap';
 
@@ -30,11 +34,11 @@ const store = configureStore();
 
 const messageHandler = (new MessageHandler(store.dispatch)).handle;
 
-
 class MainContent extends React.Component {
   componentDidMount() {
     store.dispatch(Action.hydrate());
   }
+
   render() {
     const config = {
       sidebar: 300,
@@ -204,6 +208,44 @@ class MainContent extends React.Component {
     };
     return (
       <div>
+        <Joyride
+          ref={c => (this.joyride = c)}
+          steps={[
+            {
+              title: 'Projects',
+              selector: '.tab1',
+              position: 'bottom',
+            },
+            {
+              title: 'Project Name',
+              selector: '.form1 > div:nth-child(1) > input',
+              position: 'bottom',
+            },
+            {
+              title: 'Project Description',
+              selector: '.form1 > div:nth-child(2) > input',
+              position: 'bottom',
+            },
+            {
+              title: 'Data',
+              selector: '.tab2',
+              position: 'bottom',
+            }
+            /*,
+            {
+              title: 'Data',
+              selector: '.box1',
+            }
+            */
+          ]}
+          run={true}
+          type={"continuous"}
+          showSkipButton={true}
+          showOverlay={true}
+          allowClicksThruHole={true}
+          autoStart={true}
+          disableOverlay={true}
+        />
 
         <div style={style.topbar}>
           <div style={style.topbar.text}>
@@ -254,6 +296,7 @@ class MainContent extends React.Component {
           <Tabs>
             <TabList style={style.tabs}>
               <Tab
+                className="tab1"
                 data-tip
                 data-for="projectTabTooltip"
                 style={style.disableable}
@@ -261,6 +304,7 @@ class MainContent extends React.Component {
                 Projects
               </Tab>
               <Tab
+                className="tab2"
                 data-tip
                 data-for="datasetsTabTooltip"
                 style={style.disableable}
@@ -409,7 +453,6 @@ const mapDispatchToProps = dispatch => (
 );
 
 MainContent = connect(mapStateToProps, mapDispatchToProps)(MainContent);
-
 
 ReactDOM.render(
   <Provider store={store}>
