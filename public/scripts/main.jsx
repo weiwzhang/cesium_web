@@ -35,8 +35,87 @@ const store = configureStore();
 const messageHandler = (new MessageHandler(store.dispatch)).handle;
 
 class MainContent extends React.Component {
+
+// For Walkthrough
+  constructor(props) {
+
+    super(props);
+
+    this.state = {
+      autoStart: false,
+      running: false,
+      steps: [
+        {
+          title: 'Projects',
+          selector: '.tab1',
+          position: 'bottom',
+        },
+        {
+          title: 'Project Name',
+          selector: '.form1 > div:nth-child(1) > input',
+          position: 'bottom',
+        },
+        {
+          title: 'Project Description',
+          selector: '.form1 > div:nth-child(2) > input',
+          position: 'bottom',
+        },
+        {
+          title: 'Data',
+          selector: '.tab2',
+          position: 'bottom',
+        }
+        /*,
+        {
+          title: 'Data',
+          selector: '.box1',
+        }
+        */
+      ],
+      step: 0,
+    };
+  
+    this.handleClickStart = this.handleClickStart.bind(this);
+    this.handleJoyrideCallback = this.handleJoyrideCallback.bind(this);
+  }
+
   componentDidMount() {
     store.dispatch(Action.hydrate());
+  }
+
+  handleClickStart(e) {
+    e.preventDefault();
+
+    this.setState({
+      running: true,
+      autoStart: true,
+      step: 0,
+    });
+  }
+
+   handleJoyrideCallback(result) {
+    const { joyride } = this.props;
+
+    if (result.type === 'step:before') {
+      // Keep internal state in sync with joyride
+      this.setState({ step: result.index });
+    }
+
+    if (result.type === 'finished' && this.state.running) {
+      // Need to set our running state to false, so we can restart if we click start again.
+      this.setState({ running: false });
+    }
+
+    if (result.type === 'error:target_not_found') {
+      this.setState({
+        step: result.action === 'back' ? result.index - 1 : result.index + 1,
+        autoStart: result.action !== 'close' && result.action !== 'esc',
+      });
+    }
+
+    if (typeof joyride.callback === 'function') {
+      joyride.callback();
+    }
   }
 
   render() {
@@ -206,47 +285,30 @@ class MainContent extends React.Component {
       OTransform: rotate,
       transform: rotate
     };
+
+      const { joyride } = this.props;
+    const joyrideProps = {
+      autoStart: joyride.autoStart || this.state.autoStart,
+      callback: this.handleJoyrideCallback,
+      debug: false,
+      disableOverlay: this.state.step === 1,
+      resizeDebounce: joyride.resizeDebounce,
+      run: joyride.run || this.state.running,
+      scrollToFirstStep: joyride.scrollToFirstStep || true,
+      stepIndex: joyride.stepIndex || this.state.step,
+      steps: joyride.steps || this.state.steps,
+      type: joyride.type || 'continuous',
+      allowClicksThruHole: true
+    };
+
     return (
       <div>
-        <Joyride
-          ref={c => (this.joyride = c)}
-          steps={[
-            {
-              title: 'Projects',
-              selector: '.tab1',
-              position: 'bottom',
-            },
-            {
-              title: 'Project Name',
-              selector: '.form1 > div:nth-child(1) > input',
-              position: 'bottom',
-            },
-            {
-              title: 'Project Description',
-              selector: '.form1 > div:nth-child(2) > input',
-              position: 'bottom',
-            },
-            {
-              title: 'Data',
-              selector: '.tab2',
-              position: 'bottom',
-            }
-            /*,
-            {
-              title: 'Data',
-              selector: '.box1',
-            }
-            */
-          ]}
-          run={true}
-          type={"continuous"}
-          showSkipButton={true}
-          //showOverlay={true}
-          allowClicksThruHole={true}
-          autoStart={true}
-          disableOverlay={true}
-        />
-
+        
+       
+      <Joyride
+        {...joyrideProps}
+        ref={c => (this.joyride = c)} />
+          
         <div style={style.topbar}>
           <div style={style.topbar.text}>
             <div style={style.topbar.header}>
@@ -261,6 +323,8 @@ class MainContent extends React.Component {
 
           </div>
         </div>
+
+        
 
         <div style={style.sidebar}>
           <div style={style.topic}>Project</div>
@@ -366,6 +430,9 @@ class MainContent extends React.Component {
             </TabPanel>
           </Tabs>
           <div style={style.footer}>
+            <div>
+              <button onClick={this.handleClickStart}>Start a Tour!</button>
+            </div>  
             Cesium is an open source Machine Learning Time-Series Platform
             &middot;
             Follow the <a style={style.footer.a} href="http://cesium.ml">Cesium project</a> on <a style={style.footer.a} href="https://github.com/cesium-ml">GitHub</a>
@@ -412,8 +479,23 @@ MainContent.propTypes = {
   selectedProject: React.PropTypes.object.isRequired,
   root: React.PropTypes.string.isRequired,
   logoSpinAngle: React.PropTypes.number.isRequired,
-  spinLogo: React.PropTypes.func
+  spinLogo: React.PropTypes.func,
+
+  // For Walkthrough
+  joyride: React.PropTypes.shape({
+    autoStart: React.PropTypes.bool,
+    callback: React.PropTypes.func,
+    run: React.PropTypes.bool,
+  })
 };
+
+MainContent.defaultProps = {
+  joyride: {
+    autoStart: false,
+    resizeDebounce: false,
+    run: false,
+  },
+}
 
 const mapStateToProps = function (state) {
   // This can be improved by using
