@@ -16,7 +16,7 @@ const ProjectForm = (props) => {
           error, resetForm, submitting, handleSubmit } = props;
 
   return (
-    <Form className="form1" onSubmit={handleSubmit} error={error}>
+    <Form onSubmit={handleSubmit} error={error}>
       <TextInput label="Project Name" {...projectName} />
       <TextInput label="Project Description (optional)" {...projectDescription} />
       <SubmitButton
@@ -120,13 +120,17 @@ let AddProject = (props) => {
     color: 'black'
   };
   return (
+    <div className="newProjectExpand">
     <Expand
       id={props.id}
       label={props.label || "Add Project"}
       expandBoxStyle={expandBoxStyle} style={props.style}
     >
+      <div className="newProjectForm">
       <NewProjectForm label="Create Project" onSubmit={props.addProject} />
+      </div>
     </Expand>
+    </div>
   );
 };
 

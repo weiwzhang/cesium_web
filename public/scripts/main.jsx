@@ -46,31 +46,27 @@ class MainContent extends React.Component {
       running: false,
       steps: [
         {
-          title: 'Projects',
+          title: 'Project tab! Wow!',
           selector: '.tab1',
-          position: 'bottom',
         },
         {
-          title: 'Project Name',
-          selector: '.form1 > div:nth-child(1) > input',
-          position: 'bottom',
+          title: 'Make a new project!',
+          selector: '.newProjectExpand',
+          style: {
+            footer: {
+              display: 'none',
+            },
+          },
         },
         {
-          title: 'Project Description',
-          selector: '.form1 > div:nth-child(2) > input',
-          position: 'bottom',
+          title: 'Fill out Project information',
+          selector: '.newProjectForm',
+          style: {
+            footer: {
+              display: 'none',
+            },
+          },
         },
-        {
-          title: 'Data',
-          selector: '.tab2',
-          position: 'bottom',
-        }
-        /*,
-        {
-          title: 'Data',
-          selector: '.box1',
-        }
-        */
       ],
       step: 0,
     };
@@ -331,7 +327,7 @@ class MainContent extends React.Component {
 
           <div style={style.sidebarContent}>
             <ProjectSelector label="Choose your project here:" style={style.projectSelector} />
-            <AddProject id="newProjectExpander" label="Or click here to add a new one" style={style.addProject} />
+            <AddProject id="newProjectExpander" label="Or click here to add a new one" style={style.addProject}/>
           </div>
 
           <div style={style.topic}>Progress</div>
@@ -404,6 +400,7 @@ class MainContent extends React.Component {
                   url={`ws://${this.props.root}websocket`}
                   auth_url={`${location.protocol}//${this.props.root}socket_auth_token`}
                   messageHandler={messageHandler}
+                  dispatch={store.dispatch}
                 />
               </Tab>
             </TabList>
@@ -435,7 +432,7 @@ class MainContent extends React.Component {
             </div>  
             Cesium is an open source Machine Learning Time-Series Platform
             &middot;
-            Follow the <a style={style.footer.a} href="http://cesium.ml">Cesium project</a> on <a style={style.footer.a} href="https://github.com/cesium-ml">GitHub</a>
+            Follow the <a style={style.footer.a} href="http://cesium-ml.org">Cesium project</a> on <a style={style.footer.a} href="https://github.com/cesium-ml">GitHub</a>
           </div>
 
         </div>
