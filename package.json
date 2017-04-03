@@ -19,8 +19,7 @@
     "react-redux": "latest",
     "react-tabs": "latest",
     "react-tooltip": "latest",
-    // "react-user-tour": "^2.4.2",
-    "react-joyride": "^1.10.1",
+    "react-user-tour": "^2.4.2",
     "redux": "latest",
     "redux-form": "^5.3.3",
     "redux-logger": "latest",
@@ -51,7 +50,6 @@
     "imports-loader": "latest",
     "style-loader": "latest",
     "webpack-dev-server": "latest"
-    "react-scripts": "0.9.5"
   },
   "browserify": {
     "transform": [

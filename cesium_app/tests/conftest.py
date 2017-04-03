@@ -4,8 +4,9 @@ import pytest
 import os
 import distutils.spawn
 import types
-from cesium_app.config import cfg
 from cesium_app import models as m
+from cesium_app.config import cfg
+
 
 @pytest.fixture(scope='module', autouse=True)
 def driver(request):
@@ -51,8 +52,4 @@ def remove_test_files(request):
                 os.remove(f.file.uri)
             except:
                 pass
-    try:
-        m.db.connect()
-        request.addfinalizer(teardown)
-    except:  # skip teardown if DB not available
-        pass
+    request.addfinalizer(teardown)

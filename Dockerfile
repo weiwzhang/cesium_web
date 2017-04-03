@@ -1,12 +1,11 @@
 FROM ubuntu:16.04
 
 RUN apt-get update && \
-    apt-get install -y curl build-essential software-properties-common && \
-    curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
+    apt-get install -y software-properties-common && \
     apt-get update && \
     apt-get -y upgrade && \
     apt-get install -y python3-venv libpq-dev supervisor libpython3-dev \
-                       git nginx nodejs && \
+                       git nginx npm nodejs && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* && \
     useradd --create-home --shell /bin/bash cesium

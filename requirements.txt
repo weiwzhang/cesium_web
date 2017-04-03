@@ -1,4 +1,5 @@
-cesium>=0.9.1
+cesium>=0.8.0
+netCDF4
 peewee>=2.8.3
 psycopg2==2.6.2
 requests>=2.6.0
@@ -11,4 +12,4 @@ simplejson
 distributed>=1.14.3
 selenium
 pytest
-joblib>=0.11
+joblib

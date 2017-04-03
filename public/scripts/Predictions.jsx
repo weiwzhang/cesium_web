@@ -168,7 +168,7 @@ const PredictionResults = (props) => {
     modelHasClass = !modelHasProba;
   }
 
-  const hasTrueTargetLabel = p => (p && p.label);
+  const hasTrueTargetLabel = p => (p && p.target);
 
   return (
     <table className="table">
@@ -201,7 +201,7 @@ const PredictionResults = (props) => {
 
             {
               [hasTrueTargetLabel(result) &&
-                <td key="pt">{result.label}</td>,
+                <td key="pt">{result.target}</td>,
 
                modelHasProba &&
                classesSorted.map((classLabel, idx2) => ([
