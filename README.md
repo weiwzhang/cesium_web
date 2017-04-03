@@ -54,7 +54,7 @@ The easiest way to try the web app is to run it through Docker:
     ```
     and restart `postgresl` (`sudo service postgresql restart`).
 
-2. Install Python and JavaScript dependencies with `make_dependencies`
+2. Install Python and JavaScript dependencies with `make dependencies`
 3. Initialize the database with `make db_init`
 
 If you've run this script before, you may see warnings here about the
