@@ -427,14 +427,24 @@ class MainContent extends React.Component {
             </TabPanel>
           </Tabs>
           <div style={style.footer}>
-            <div>
-              <button onClick={this.handleClickStart}>Start a Tour!</button>
-            </div>  
+            // <div>
+            //   <button onClick={this.handleClickStart}>Start a Tour!</button>
+            // </div>  
             Cesium is an open source Machine Learning Time-Series Platform
             &middot;
             Follow the <a style={style.footer.a} href="http://cesium-ml.org">Cesium project</a> on <a style={style.footer.a} href="https://github.com/cesium-ml">GitHub</a>
           </div>
-
+          
+          <div style={style.footer}>
+            Would you like to start a Walkthrough tutorial? 
+            <div>
+              <button onClick={this.handleClickStart}>Start a Tour!</button>
+            </div>  
+            <div>
+              <button onClick={this.handleClickStart}>Start a Tour!</button>
+            </div>
+          </div>   
+  
         </div>
 
         <CesiumTooltip
