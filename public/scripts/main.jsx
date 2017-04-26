@@ -36,7 +36,7 @@ const messageHandler = (new MessageHandler(store.dispatch)).handle;
 
 class MainContent extends React.Component {
 
-// For Walkthrough
+  // For Walkthrough
   constructor(props) {
 
     super(props);
@@ -44,35 +44,51 @@ class MainContent extends React.Component {
     this.state = {
       autoStart: false,
       running: false,
+      showSkipButton: true,
       steps: [
         {
-          title: 'Project tab! Wow!',
-          selector: '.tab1',
+          text: '0 First you need to create a Project!',
+          selector: '#react-tabs-0',
+          position: 'right',
         },
         {
-          title: 'Make a new project!',
+          text: '1 Click here to add new project!',
           selector: '.newProjectExpand',
-          style: {
-            footer: {
-              display: 'none',
-            },
-          },
+          position: 'right',
         },
         {
-          title: 'Fill out Project information',
-          selector: '.newProjectForm',
-          style: {
-            footer: {
-              display: 'none',
-            },
-          },
+          text: '2.1 Fill out Project information',
+          selector: '.newProjectExpand > div > div',
+          position: 'right',
         },
+        {
+          text: '2.2 Fill out Project information',
+          selector: '.newProjectExpand > div > div',
+          position: 'right',
+        },
+        {
+          text: '2.3 Fill out Project information',
+          selector: '.newProjectExpand > div > div',
+          position: 'right',
+        },
+         {
+          text: '3 Data tab! Wow!',
+          selector: '#react-tabs-2',
+          position: 'right',
+        },
+        {
+          text: '4 Features tab! Wow!',
+          selector: '#react-tabs-4',
+          position: 'right',
+        },
+        
       ],
       step: 0,
     };
   
     this.handleClickStart = this.handleClickStart.bind(this);
     this.handleJoyrideCallback = this.handleJoyrideCallback.bind(this);
+    this.resetTour = this.resetTour.bind(this);
   }
 
   componentDidMount() {
@@ -86,34 +102,58 @@ class MainContent extends React.Component {
       running: true,
       autoStart: true,
       step: 0,
+      run: true,
     });
   }
+ 
+  handleJoyrideCallback(result) {
 
-   handleJoyrideCallback(result) {
     const { joyride } = this.props;
 
-    if (result.type === 'step:before') {
-      // Keep internal state in sync with joyride
-      this.setState({ step: result.index });
-    }
+    if (result.index === 1) {  
+      this.props.toggleProjectExpander();
+    } 
 
-    if (result.type === 'finished' && this.state.running) {
+    else if (result.index === 2) {
+      this.props.toggleProjectExpander();
+    }
+    
+    else if (result.type === 'step:before') {
+        // Keep internal state in sync with joyride
+      if (result.index === 4) {  
+              document.getElementById('form > div:nth-child(1) > input').value = "hehe";
+              document.getElementById('form > div:nth-child(2) > input').value = "meweo"
+          } 
+        this.setState({ step: result.index });  
+    } 
+
+    else if (result.type === 'finished' && this.state.running) {
       // Need to set our running state to false, so we can restart if we click start again.
       this.setState({ running: false });
     }
 
-    if (result.type === 'error:target_not_found') {
+    else if (result.action == 'close') {
+      this.setState({running: false});
+      this.resetTour();
+    }
+
+    else if (result.type === 'error:target_not_found') {
       this.setState({
         step: result.action === 'back' ? result.index - 1 : result.index + 1,
         autoStart: result.action !== 'close' && result.action !== 'esc',
       });
     }
 
-    if (typeof joyride.callback === 'function') {
+    else if (typeof joyride.callback === 'function') {
       joyride.callback();
     }
   }
 
+  resetTour() {
+    console.dir(this);
+    this.joyride.reset(true);
+  }
+  
   render() {
     const config = {
       sidebar: 300,
@@ -198,20 +238,26 @@ class MainContent extends React.Component {
       footer: {
         position: 'fixed',
         zIndex: -1000,
-        fontSize: '110%',
+        fontSize: 14,
         bottom: 0,
         margin: 0,
         left: config.sidebar,
         right: 0,
-        textAlign: 'center',
+        textAlign: 'bottom',
         verticalAlign: 'middle',
         color: 'white',
         lineHeight: config.footer,
-        height: config.footer,
+        height: 'config.footer',
         background: cs.darkBlue,
         a: {
           color: 'white',
-          textDecoration: 'underline'
+          textDecoration: 'underline',
+          textAlign: 'center',
+          float: 'center',
+        },
+        b :{
+          float: 'right',
+          fontSize: 10,
         }
       },
       projectSelector: {
@@ -268,6 +314,26 @@ class MainContent extends React.Component {
       progress: {
         height: '4em'
       },
+      button: {
+        border: 0,
+        borderRadius: '12px',
+        padding: '5 5',
+        backgroundColor: 'blue',
+        color: 'white',
+        fontSize: 14,
+        height: '2em',
+        lineHeight: '2em',
+      },
+      button_div: {
+        border: '4px',
+        borderRadius: '12px',
+        padding: '5 2',
+        height: '2em',
+        lineHeight: '2em',
+        display: 'inline-block',
+        float: 'left',
+        marginLeft: '20em'
+      },
     };
     const rotate = `rotate(${this.props.logoSpinAngle}deg)`;
     const rotateStyle = {
@@ -282,19 +348,20 @@ class MainContent extends React.Component {
       transform: rotate
     };
 
-      const { joyride } = this.props;
+    const { joyride } = this.props;
     const joyrideProps = {
       autoStart: joyride.autoStart || this.state.autoStart,
       callback: this.handleJoyrideCallback,
-      debug: false,
-      disableOverlay: this.state.step === 1,
+      debug: true,
+      // disableOverlay: this.state.step === 1,
       resizeDebounce: joyride.resizeDebounce,
       run: joyride.run || this.state.running,
       scrollToFirstStep: joyride.scrollToFirstStep || true,
       stepIndex: joyride.stepIndex || this.state.step,
       steps: joyride.steps || this.state.steps,
       type: joyride.type || 'continuous',
-      allowClicksThruHole: true
+      allowClicksThruHole: true,
+      showSkipButton: true,
     };
 
     return (
@@ -319,8 +386,7 @@ class MainContent extends React.Component {
 
           </div>
         </div>
-
-        
+       
 
         <div style={style.sidebar}>
           <div style={style.topic}>Project</div>
@@ -427,24 +493,18 @@ class MainContent extends React.Component {
             </TabPanel>
           </Tabs>
           <div style={style.footer}>
-            // <div>
-            //   <button onClick={this.handleClickStart}>Start a Tour!</button>
-            // </div>  
-            Cesium is an open source Machine Learning Time-Series Platform
-            &middot;
-            Follow the <a style={style.footer.a} href="http://cesium-ml.org">Cesium project</a> on <a style={style.footer.a} href="https://github.com/cesium-ml">GitHub</a>
-          </div>
-          
-          <div style={style.footer}>
-            Would you like to start a Walkthrough tutorial? 
-            <div>
-              <button onClick={this.handleClickStart}>Start a Tour!</button>
-            </div>  
-            <div>
-              <button onClick={this.handleClickStart}>Start a Tour!</button>
+            <div style={style.footer.a}>Would you like a Walkthrough tutorial of the website?</div>
+            <div style={style.button_div}>
+              <button style={style.button} onClick={this.handleClickStart}>Start the tour!</button>
             </div>
-          </div>   
-  
+            <div style={style.button_div}>
+              <button style={style.button} onClick={function() {return undefined;}}>No thanks</button> 
+            </div>
+            <div style={style.footer.b}>
+              Cesium is an open source Machine Learning Time-Series Platform &middot;
+              Follow the <a style={style.footer.a} href="http://cesium-ml.org">Cesium project</a> on <a style={style.footer.a} href="https://github.com/cesium-ml">GitHub</a>
+            </div>
+          </div>
         </div>
 
         <CesiumTooltip
@@ -482,11 +542,14 @@ class MainContent extends React.Component {
     );
   }
 }
+
 MainContent.propTypes = {
   selectedProject: React.PropTypes.object.isRequired,
   root: React.PropTypes.string.isRequired,
   logoSpinAngle: React.PropTypes.number.isRequired,
   spinLogo: React.PropTypes.func,
+  toggleProjectExpander: React.PropTypes.func,
+  hideProjectExpander: React.PropTypes.func,
 
   // For Walkthrough
   joyride: React.PropTypes.shape({
@@ -537,6 +600,13 @@ const mapDispatchToProps = dispatch => (
     },
     spinLogo: () => {
       dispatch(Action.spinLogo());
+    },
+    toggleProjectExpander: () => {
+      dispatch(Action.toggleExpander("newProjectExpander"));
+      // dispatch(Action.spinLogo());
+    },
+    hideProjectExpander: () => {
+      dispatch(Action.hideExpander("newProjectExpander"));
     }
   }
 );
