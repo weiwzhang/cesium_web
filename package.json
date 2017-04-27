@@ -2,15 +2,17 @@
   "name": "Cesium",
   "license": "BSD-3-Clause",
   "scripts": {
-    "build": "webpack"
+    "build": "make bundle",
+    "test": "eslint -c .eslintrc --ext .jsx,.js static/scripts/ && make test"
   },
   "dependencies": {
-    "bootstrap": "latest",
-    "bootstrap-css": "latest",
-    "filter-values": "latest",
-    "jquery": "latest",
-    "jquery-form": "latest",
-    "plotly.js": "latest",
+    "bokehjs": "^0.12.5",
+    "bootstrap": "^3.3.7",
+    "bootstrap-css": "^3.0.0",
+    "css-loader": "^0.26.2",
+    "exports-loader": "^0.6.4",
+    "imports-loader": "^0.7.1",
+    "jquery": "^3.1.1",
     "react": "^15.1.0",
     "react-addons": "latest",
     "react-addons-css-transition-group": "latest",
@@ -21,10 +23,13 @@
     "react-tooltip": "^3.2.7",
     "redux": "^3.6.0",
     "redux-form": "^5.3.3",
-    "redux-logger": "latest",
-    "redux-thunk": "latest",
-    "webpack": "latest",
-    "whatwg-fetch": "latest"
+    "redux-logger": "^2.8.1",
+    "redux-thunk": "^2.2.0",
+    "style-loader": "^0.13.2",
+    "typescript": "^2.2.2",
+    "webpack": "^2.2.1",
+    "webpack-dev-server": "^2.4.1",
+    "whatwg-fetch": "^2.0.2"
   },
   "devDependencies": {
     "babel": "latest",

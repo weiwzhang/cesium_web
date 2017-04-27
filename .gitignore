@@ -1,7 +1,9 @@
 .#*
 log/
 .cache
-public/build
+static/build
+run/
+public/
 ghostdriver.log
 \#*
 *~
@@ -9,4 +11,7 @@ ghostdriver.log
 *.swo
 __pycache__/
 node_modules/
-run/supervisor.sock
+*.pyc
+_cesium_test.yaml
+cesium.yaml
+data

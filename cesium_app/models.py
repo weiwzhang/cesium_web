@@ -1,8 +1,8 @@
 import datetime
-import inspect
 import os
 import sys
 import time
+import pandas as pd
 
 import peewee as pw
 from playhouse.postgres_ext import ArrayField, BinaryJSONField
@@ -11,14 +11,24 @@ from playhouse import signals
 import xarray as xr
 
 from cesium_app.json_util import to_json
-from cesium_app.config import cfg
+from cesium import featurize
 
 
-db = pw.PostgresqlDatabase(autocommit=True, autorollback=True,
-                           **cfg['database'])
+# The db has to be initialized later; this is done by the app itself
+# See `app_server.py`
+db = pw.PostgresqlDatabase(None, autocommit=True, autorollback=True)
 
 
 class BaseModel(signals.Model):
+    """All other models are derived from this one.
+
+    It adds the following:
+
+    - __dict__ method to convert the model to a dict
+    - __str__ method to convert the model to a JSON string: `str(my_model)`
+    - Specify the database in use
+
+    """
     def __str__(self):
         return to_json(self.__dict__())
 
@@ -29,6 +39,27 @@ class BaseModel(signals.Model):
         database = db
 
 
+class User(BaseModel):
+    """This model defines any user attributes needed by the web app.
+
+    Other user information needed by the login system is stored in
+    UserSocialAuth.
+
+    """
+    username = pw.CharField(unique=True)
+    email = pw.CharField(unique=True)
+
+    @classmethod
+    def user_model(cls):
+        return User
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+
 class Project(BaseModel):
     """ORM model of the Project table"""
     name = pw.CharField()
@@ -37,32 +68,35 @@ class Project(BaseModel):
 
     @staticmethod
     def all(username):
+        user = User.get(username=username)
         return (Project
                 .select()
                 .join(UserProject)
-                .where(UserProject.username == username)
+                .where(UserProject.user == user)
                 .order_by(Project.created))
 
     @staticmethod
     def add_by(name, description, username):
+        user = User.get(username=username)
         with db.atomic():
             p = Project.create(name=name, description=description)
-            UserProject.create(username=username, project=p)
+            UserProject.create(user=user, project=p)
         return p
 
     def is_owned_by(self, username):
-        users = [o.username for o in self.owners]
-        return username in users
+        user = User.get(username=username)
+        users = [owner.user for owner in self.owners]
+        return user in users
 
 
 class UserProject(BaseModel):
-    username = pw.CharField()
+    user = pw.ForeignKeyField(User, related_name='projects')
     project = pw.ForeignKeyField(Project, related_name='owners',
                                  on_delete='CASCADE')
 
     class Meta:
         indexes = (
-            (('username', 'project'), True),
+            (('user', 'project'), True),
         )
 
 
@@ -71,6 +105,7 @@ class File(BaseModel):
     uri = pw.CharField(primary_key=True)  # s3://cesium_bin/3eef6601a
     name = pw.CharField(null=True)
     created = pw.DateTimeField(default=datetime.datetime.now)
+
 
 @signals.post_delete(sender=File)
 def remove_file_after_delete(sender, instance):
@@ -134,6 +169,7 @@ class DatasetFile(BaseModel):
             (('dataset', 'file'), True),
         )
 
+
 @signals.pre_delete(sender=Dataset)
 def remove_related_files(sender, instance):
     for f in instance.files:
@@ -147,13 +183,25 @@ class Featureset(BaseModel):
     name = pw.CharField()
     created = pw.DateTimeField(default=datetime.datetime.now)
     features_list = ArrayField(pw.CharField)
-    custom_features_script = pw.CharField(null=True) # move to fset file?
+    custom_features_script = pw.CharField(null=True)  # move to fset file?
     file = pw.ForeignKeyField(File, on_delete='CASCADE')
     task_id = pw.CharField(null=True)
     finished = pw.DateTimeField(null=True)
 
     def is_owned_by(self, username):
         return self.project.is_owned_by(username)
+
+    @staticmethod
+    def get_if_owned(fset_id, username):
+        try:
+            f = Featureset.get(Featureset.id == fset_id)
+        except Featureset.DoesNotExist:
+            raise AccessError('No such feature set')
+
+        if not f.is_owned_by(username):
+            raise AccessError('No such feature set')
+
+        return f
 
 
 class Model(BaseModel):
@@ -190,6 +238,23 @@ class Prediction(BaseModel):
     def is_owned_by(self, username):
         return self.project.is_owned_by(username)
 
+    def format_pred_data(fset, data):
+        fset.columns = fset.columns.droplevel('channel')
+        fset.index = fset.index.astype(str)  # can't use ints as JSON keys
+
+        labels = pd.Series(data['labels'] if len(data.get('labels', [])) > 0
+                           else None, index=fset.index)
+
+        if len(data.get('pred_probs', [])) > 0:
+            preds = pd.DataFrame(data.get('pred_probs', []),
+                                 index=fset.index).to_dict(orient='index')
+        else:
+            preds = pd.Series(data['preds'], index=fset.index).to_dict()
+        result = {name: {'features': feats, 'label': labels.loc[name],
+                         'prediction': preds[name]}
+                  for name, feats in fset.to_dict(orient='index').items()}
+        return result
+
     def display_info(self):
         info = self.__dict__()
         info['model_type'] = self.model.type
@@ -208,66 +273,3 @@ class Prediction(BaseModel):
                 info['isProbabilistic'] = 'class_label' in\
                                           first_result.prediction
         return info
-
-
-models = [
-    obj for (name, obj) in inspect.getmembers(sys.modules[__name__])
-    if inspect.isclass(obj) and issubclass(obj, pw.Model)
-    and not obj == BaseModel
-]
-
-
-def create_tables(retry=5):
-    for i in range(1, retry + 1):
-        try:
-            db.create_tables(models, safe=True)
-            return
-        except Exception as e:
-            if (i == retry):
-                raise e
-            else:
-                print('Could not connect to database...sleeping 5')
-                time.sleep(5)
-
-def drop_tables():
-    db.drop_tables(models, safe=True, cascade=True)
-
-
-if __name__ == "__main__":
-    print("Dropping all tables...")
-    drop_tables()
-    print("Creating tables: {}".format([m.__name__ for m in models]))
-    create_tables()
-
-    USERNAME = 'testuser@gmail.com'
-    print("Inserting dummy projects...")
-    for i in range(5):
-        p = Project.create(name='test project {}'.format(i))
-        print(p)
-
-    print("Creating dummy project owners...")
-    for i in range(3):
-        p = Project.get(Project.id == i + 1)
-        u = UserProject.create(username=USERNAME, project=p)
-        print(u)
-
-    print('ASSERT User should have 3 projects')
-    print(to_json(p.all('testuser@gmail.com')))
-    assert(len(list(p.all('testuser@gmail.com'))) == 3)
-
-    print("Inserting dummy dataset and time series...")
-    file_uris = ['/dir/ts{}.nc'.format(i) for i in range(3)]
-    d = Dataset.add(name='test dataset', project=p, file_uris=file_uris)
-
-    print("Inserting dummy featureset...")
-    test_file = File.get()
-    f = Featureset.create(project=p, dataset=d, name='test featureset',
-                          features_list=['amplitude'], file=test_file)
-
-    print("Inserting dummy model...")
-    m = Model.create(project=p, featureset=f, name='test model',
-                     params={'n_estimators': 10}, type='RFC',
-                     file=test_file)
-
-    print("Inserting dummy prediction...")
-    pr = Prediction.create(project=p, model=m, file=test_file, dataset=d)
